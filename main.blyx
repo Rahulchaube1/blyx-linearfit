@@ -1,13 +1,14 @@
 use std::cli;
 use std::text;
 use csvpair;
+use csvfit;
 use linearfit;
 
 fn main() {
     let args = cli_args();
     if args_len(args) == 0 { csv_fail("Usage: linearfit FILE [--ridge LAMBDA] [--predict X]"); }
     let path = args_at(args, 0);
-    if path == "--version" { println!("linearfit 0.1.0"); return; }
+    if path == "--version" { println!("linearfit 0.1.1"); return; }
     if path == "--help" {
         println!("linearfit FILE [--ridge LAMBDA] [--predict X]");
         println!("Read a numeric x,y CSV and print a centered regression model as JSON.");
@@ -25,16 +26,7 @@ fn main() {
         i += 2;
     }
     if penalty < 0.0 { csv_fail("Ridge penalty must be nonnegative."); }
-    let lines = csv_open(path, "x,y");
-    let mut stats = lf_start();
-    i = 1;
-    while i < args_len(lines) {
-        let row = csv_pair(args_at(lines, i), i + 1);
-        i += 1;
-        if len(row) == 0 { continue; }
-        stats = lf_update(stats, at(row, 0), at(row, 1));
-        if len(stats) == 0 { csv_error(i, "training summary exceeds numeric range"); }
-    }
+    let stats = lf_csv_summary(path);
     let model = lf_finish(stats, penalty);
     if len(model) == 0 { csv_fail("Fit requires two rows, finite moments and a positive denominator. Use --ridge for constant x."); }
     let mut result = 0.0;

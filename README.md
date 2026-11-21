@@ -9,7 +9,7 @@ Train, merge and deploy a single-feature least-squares or ridge regression with 
 Install [Blyx 0.2.1](https://github.com/Rahulchaube1/blyxxxx/releases/tag/v0.2.1), Rust 1.85 or newer, and a host linker for native compilation. From the directory containing your entry file, pin the library with Git.
 
 ```sh
-git clone --depth 1 --branch v0.1.0 https://github.com/Rahulchaube1/blyx-linearfit.git vendor/linearfit
+git clone --depth 1 --branch v0.1.1 https://github.com/Rahulchaube1/blyx-linearfit.git vendor/linearfit
 ```
 
 Save this program as `main.blyx` beside `vendor` and run `blyxc native-run main.blyx`.
@@ -34,7 +34,7 @@ Expected output:
 
 ## Command-line tool
 
-Extract [the release archive](https://github.com/Rahulchaube1/blyx-linearfit/releases/tag/v0.1.0) for Windows x64, Linux x64 or Apple Silicon macOS. Verify the archive against `SHA256SUMS`. The archive includes example CSV files. In PowerShell start the executable with `.\linearfit.exe`. The x64 Windows executable uses the Microsoft Visual C++ runtime.
+Extract [the release archive](https://github.com/Rahulchaube1/blyx-linearfit/releases/tag/v0.1.1) for Windows x64, Linux x64 or Apple Silicon macOS. Verify the archive against `SHA256SUMS`. The archive includes example CSV files. In PowerShell start the executable with `.\linearfit.exe`. The x64 Windows executable uses the Microsoft Visual C++ runtime.
 
 ```sh
 ./linearfit fixtures/line.csv --predict 5
@@ -47,6 +47,7 @@ Extract [the release archive](https://github.com/Rahulchaube1/blyx-linearfit/rel
 | `lf_fit(xs, ys, penalty)` | Fit aligned finite vectors and return [mean_x, mean_y, slope]. |
 | `lf_start()`, `lf_update(state, x, y)`, `lf_merge(a, b)` | Start, update or merge disjoint training batches. |
 | `lf_finish(state, penalty)` | Finalize a reusable model after at least two observations. |
+| `lf_csv_summary(path)` | Import the native `csvfit` module to read a training CSV into a mergeable summary. |
 | `lf_predict(model, x)` | Evaluate mean_y + slope × (x − mean_x). |
 
 The slope is Sxy/(Sxx + penalty). The objective is the sum of squared errors plus penalty × slope². A penalty of zero gives ordinary least squares. A positive penalty gives a constant predictor when x never varies. Constant x with zero penalty, a negative penalty, and invalid or unrepresentable input return an empty model. An invalid prediction returns NaN. Keeping the model centered avoids explicitly forming a large intercept.
