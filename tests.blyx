@@ -1,0 +1,18 @@
+use linearfit;
+use std::cli;
+fn check(ok: bool) { if !ok { stderr_line("linearfit check failed"); process_exit(1); } }
+fn main() {
+    let model = lf_fit([1, 2, 3, 4], [3, 5, 7, 9], 0.0);
+    check(at(model, 2) == 2.0 && lf_predict(model, 5.0) == 11.0);
+    let ridge = lf_fit([1, 2, 3, 4], [3, 5, 7, 9], 5.0);
+    check(at(ridge, 2) == 1.0 && lf_predict(ridge, 2.5) == 6.0);
+    let a = lf_update(lf_start(), 1.0, 3.0);
+    let b = lf_update(lf_start(), 3.0, 7.0);
+    check(lf_predict(lf_finish(lf_merge(a, b), 0.0), 4.0) == 9.0);
+    check(len(lf_fit([1, 1], [2, 3], 0.0)) == 0 && len(lf_fit([1], [2], 1.0)) == 0);
+    check(lf_predict(lf_fit([1, 1], [3, 5], 1.0), 20.0) == 4.0);
+    check(len(lf_fit([1], [], 0.0)) == 0 && len(lf_fit([1, 2], [2, 3], -1.0)) == 0);
+    let invalid = lf_predict([], 1.0);
+    check(invalid != invalid);
+    println!("linearfit checks passed");
+}

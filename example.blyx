@@ -1,0 +1,6 @@
+use linearfit;
+fn main() {
+    let training = lf_fit([1, 2, 3, 4], [3, 5, 7, 9], 0.0);
+    println!(at(training, 2));
+    println!(lf_predict(training, 5.0));
+}

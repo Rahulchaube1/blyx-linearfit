@@ -1,0 +1,29 @@
+use vendor::moments;
+
+fn finite(x: f64) -> bool { x - x == 0.0 }
+
+pub fn lf_start() -> vector { mom_empty() }
+pub fn lf_update(s: vector, x: f64, y: f64) -> vector { mom_update(s, x, y) }
+pub fn lf_merge(a: vector, b: vector) -> vector { mom_merge(a, b) }
+
+// Model is centered at the sample means to preserve precision in prediction.
+// penalty multiplies slope squared in the unnormalized sum-of-squares objective.
+pub fn lf_finish(s: vector, penalty: f64) -> vector {
+    if !mom_valid(s) || at(s, 0) < 2.0 || !finite(penalty) || penalty < 0.0 { return []; }
+    let denominator = at(s, 3) + penalty;
+    if denominator <= 0.0 || !finite(denominator) { return []; }
+    let slope = at(s, 4) / denominator;
+    if !finite(slope) { return []; }
+    [at(s, 1), at(s, 2), slope]
+}
+
+pub fn lf_fit(x: vector, y: vector, penalty: f64) -> vector {
+    lf_finish(mom_summary(x, y), penalty)
+}
+
+pub fn lf_predict(model: vector, x: f64) -> f64 {
+    if len(model) != 3 || !finite(x) { return 0.0 / 0.0; }
+    let y = at(model, 1) + at(model, 2) * (x - at(model, 0));
+    if !finite(y) { return 0.0 / 0.0; }
+    y
+}

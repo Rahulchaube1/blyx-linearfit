@@ -1,0 +1,52 @@
+use std::cli;
+use std::text;
+use csvpair;
+use linearfit;
+
+fn main() {
+    let args = cli_args();
+    if args_len(args) == 0 { csv_fail("Usage: linearfit FILE [--ridge LAMBDA] [--predict X]"); }
+    let path = args_at(args, 0);
+    if path == "--version" { println!("linearfit 0.1.0"); return; }
+    if path == "--help" {
+        println!("linearfit FILE [--ridge LAMBDA] [--predict X]");
+        println!("Read a numeric x,y CSV and print a centered regression model as JSON.");
+        return;
+    }
+    let mut penalty = 0.0;
+    let mut query = 0.0;
+    let mut predict = false;
+    let mut i = 1;
+    while i < args_len(args) {
+        let key = args_at(args, i);
+        if key == "--ridge" { penalty = csv_option(args, i); }
+        else if key == "--predict" { query = csv_option(args, i); predict = true; }
+        else { csv_fail(text_concat("Unknown option: ", key)); }
+        i += 2;
+    }
+    if penalty < 0.0 { csv_fail("Ridge penalty must be nonnegative."); }
+    let lines = csv_open(path, "x,y");
+    let mut stats = lf_start();
+    i = 1;
+    while i < args_len(lines) {
+        let row = csv_pair(args_at(lines, i), i + 1);
+        i += 1;
+        if len(row) == 0 { continue; }
+        stats = lf_update(stats, at(row, 0), at(row, 1));
+        if len(stats) == 0 { csv_error(i, "training summary exceeds numeric range"); }
+    }
+    let model = lf_finish(stats, penalty);
+    if len(model) == 0 { csv_fail("Fit requires two rows, finite moments and a positive denominator. Use --ridge for constant x."); }
+    let mut result = 0.0;
+    if predict {
+        result = lf_predict(model, query);
+        if result != result { csv_fail("Prediction exceeds numeric range."); }
+    }
+    print!("{\"rows\":"); print!(at(stats, 0));
+    print!(",\"center_x\":"); print!(at(model, 0));
+    print!(",\"center_y\":"); print!(at(model, 1));
+    print!(",\"slope\":"); print!(at(model, 2));
+    print!(",\"ridge\":"); print!(penalty);
+    if predict { print!(",\"prediction\":"); print!(result); }
+    println!("}");
+}
