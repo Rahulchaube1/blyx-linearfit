@@ -1,0 +1,35 @@
+use std::cli;
+use csvpair;
+
+// Accumulate centered moments in scalars across the whole file. The public
+// state layout matches lf_update, so a file summary can be merged or refitted.
+pub fn lf_csv_summary(path: String) -> vector {
+    let lines = csv_open(path, "x,y");
+    let mut n = 0.0;
+    let mut mx = 0.0;
+    let mut my = 0.0;
+    let mut sxx = 0.0;
+    let mut sxy = 0.0;
+    let mut syy = 0.0;
+    let mut i = 1;
+    while i < args_len(lines) {
+        let row = csv_pair(args_at(lines, i), i + 1);
+        i += 1;
+        if len(row) == 0 { continue; }
+        let x = at(row, 0);
+        let y = at(row, 1);
+        n += 1.0;
+        if n == 1.0 { mx = x; my = y; continue; }
+        let dx = x - mx;
+        let dy = y - my;
+        mx += dx / n;
+        my += dy / n;
+        sxx += dx * (x - mx);
+        sxy += dx * (y - my);
+        syy += dy * (y - my);
+        if sxx - sxx != 0.0 || sxy - sxy != 0.0 || syy - syy != 0.0 {
+            csv_error(i, "training summary exceeds numeric range");
+        }
+    }
+    [n, mx, my, sxx, sxy, syy]
+}

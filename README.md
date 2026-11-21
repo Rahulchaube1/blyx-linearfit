@@ -1,8 +1,12 @@
-<img src="assets/logo.png" width="88" height="88" alt="Blyx LinearFit logo">
+<img src="assets/logo.png" width="88" height="88" alt="An ivory gannet dives along the line of its long blue-grey bill.">
 
 # Blyx LinearFit
 
 Train, merge and deploy a single-feature least-squares or ridge regression with an unpenalized intercept. Train on one numerical feature with an intercept. Retain a compact state for an incoming stream, merge states from separate batches, or fit vectors in one call. The command-line program trains from a real CSV and can make a prediction in the same invocation.
+
+## Editor extension
+
+Install **RahulChaube.blyx-linearfit** to run the worked example and use the framework’s function completions in a Blyx file. Open an empty `.blyx` file, enter `blyx-linearfit-demo`, then choose **Blyx: Run File**. [Editor downloads](https://www.blyx-lang.space/packages/linearfit#editor) · [Download the extension](https://github.com/Rahulchaube1/blyxxxx/releases/download/framework-editors-v0.1.0/blyx-linearfit-0.1.0.vsix) · [Starter with framework source](https://github.com/Rahulchaube1/blyxxxx/releases/download/framework-editors-v0.1.0/blyx-linearfit-starter-0.1.0.zip)
 
 ## Use it in a project
 
