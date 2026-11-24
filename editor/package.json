@@ -1,8 +1,8 @@
 {
   "name": "blyx-linearfit",
   "displayName": "Blyx LinearFit",
-  "description": "Train, merge and deploy a single-feature least-squares or ridge regression with an unpenalized intercept.",
-  "version": "0.1.0",
+  "description": "Fit single-feature and bilinear regression models in Blyx. Includes factored-matrix training, predictions, source and starter projects.",
+  "version": "0.2.0",
   "publisher": "RahulChaube",
   "license": "(MIT OR Apache-2.0)",
   "icon": "logo.png",
@@ -40,7 +40,7 @@
       {
         "id": "linearfit.start",
         "title": "Get started with LinearFit",
-        "description": "Train, merge and deploy a single-feature least-squares or ridge regression with an unpenalized intercept.",
+        "description": "Fit single-feature and bilinear regression models in Blyx. Includes factored-matrix training, predictions, source and starter projects.",
         "steps": [
           {
             "id": "run",
@@ -48,6 +48,14 @@
             "description": "Create an empty .blyx file, insert blyx-linearfit-demo and choose **Blyx: Run File**.\n[Open the documentation](https://www.blyx-lang.space/packages/linearfit)",
             "media": {
               "markdown": "walkthrough.md"
+            }
+          },
+          {
+            "id": "scale",
+            "title": "Train a factored matrix",
+            "description": "Extract the starter. With the documented compiler revision installed, run the scale example task.\n[Open the experiment](https://www.blyx-lang.space/articles/training-in-factors)",
+            "media": {
+              "markdown": "scale.md"
             }
           }
         ]

@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $false
 $exe = (Resolve-Path $Executable).Path
 $inputFile = Join-Path $PSScriptRoot 'fixtures/line.csv'
-if ((& $exe --version) -ne 'linearfit 0.1.1') { throw 'Version mismatch' }
+if ((& $exe --version) -ne 'linearfit 0.2.0') { throw 'Version mismatch' }
 $out = & $exe $inputFile --predict 5
 if ($LASTEXITCODE -ne 0) { throw 'Fit failed' }
 $fit = $out | ConvertFrom-Json

@@ -1,0 +1,96 @@
+use std::buffer;
+
+fn lf_valid_rows(values: vector, rows: i64) -> bool {
+    rows > 0 && len(values) >= rows && len(values) % rows == 0
+}
+
+fn lf_row_dot(values: vector, width: i64, a: i64, b: i64) -> f64 {
+    let mut total = 0.0;
+    let mut i = 0;
+    while i < width {
+        total += at(values,a*width+i) * at(values,b*width+i);
+        i += 1;
+    }
+    total
+}
+
+// Each example has one left and one right feature vector. The Gram entry is
+// the Frobenius inner product of their two outer products.
+pub fn lf_pair_gram(left: vector, right: vector, rows: i64) -> vector {
+    if !lf_valid_rows(left,rows) || !lf_valid_rows(right,rows) { return []; }
+    if rows > 9223372036854775807 / rows { return []; }
+    let mut gram = buffer_fill(rows*rows,0.0);
+    let mut i = 0;
+    while i < rows {
+        let mut j = 0;
+        while j <= i {
+            let k = lf_row_dot(left,len(left)/rows,i,j) * lf_row_dot(right,len(right)/rows,i,j);
+            if !(k-k == 0.0) { return []; }
+            gram = buffer_set(gram,i*rows+j,k);
+            gram = buffer_set(gram,j*rows+i,k);
+            j += 1;
+        }
+        i += 1;
+    }
+    gram
+}
+
+// Ordered SGD for half squared error. Pass the returned coefficients back
+// to continue from an earlier epoch using the same factors in the same order.
+pub fn lf_pair_fit(gram: vector, targets: vector, initial: vector, epochs: i64, rate: f64) -> vector {
+    let n = len(targets);
+    if !lf_valid_rows(gram,n) || len(gram)/n != n || len(initial) != n || epochs < 1 { return []; }
+    if !(rate > 0.0 && rate-rate == 0.0) { return []; }
+    let mut alpha = initial;
+    let mut epoch = 0;
+    while epoch < epochs {
+        let mut row = 0;
+        while row < n {
+            let mut score = 0.0;
+            let mut j = 0;
+            while j < n { score += at(gram,row*n+j)*at(alpha,j); j += 1; }
+            let next = at(alpha,row) + rate*(at(targets,row)-score);
+            if !(next-next == 0.0) { return []; }
+            alpha = buffer_set(alpha,row,next);
+            row += 1;
+        }
+        epoch += 1;
+    }
+    alpha
+}
+
+pub fn lf_pair_weight(left: vector, right: vector, alpha: vector, i: i64, j: i64) -> f64 {
+    let n = len(alpha);
+    if !lf_valid_rows(left,n) || !lf_valid_rows(right,n) { return 0.0/0.0; }
+    let d = len(left)/n;
+    let e = len(right)/n;
+    if i < 0 || i >= d || j < 0 || j >= e { return 0.0/0.0; }
+    let mut sum = 0.0;
+    let mut k = 0;
+    while k < n {
+        sum += at(alpha,k)*at(left,k*d+i)*at(right,k*e+j);
+        k += 1;
+    }
+    if !(sum-sum == 0.0) { return 0.0/0.0; }
+    sum
+}
+
+pub fn lf_pair_predict(left: vector, right: vector, alpha: vector, x: vector, z: vector) -> f64 {
+    let n = len(alpha);
+    if !lf_valid_rows(left,n) || !lf_valid_rows(right,n) { return 0.0/0.0; }
+    if len(x) != len(left)/n || len(z) != len(right)/n { return 0.0/0.0; }
+    let mut sum = 0.0;
+    let mut k = 0;
+    while k < n {
+        let mut a = 0.0;
+        let mut b = 0.0;
+        let mut i = 0;
+        while i < len(x) { a += at(left,k*len(x)+i)*at(x,i); i += 1; }
+        i = 0;
+        while i < len(z) { b += at(right,k*len(z)+i)*at(z,i); i += 1; }
+        sum += at(alpha,k)*a*b;
+        k += 1;
+    }
+    if !(sum-sum == 0.0) { return 0.0/0.0; }
+    sum
+}

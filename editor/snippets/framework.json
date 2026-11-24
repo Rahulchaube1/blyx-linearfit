@@ -161,5 +161,22 @@
     "prefix": "blyx-linearfit-lf_predict",
     "body": "lf_predict(${1:model}, ${2:x})$0",
     "description": "Freeze a model and predict a response in the original units."
+  },
+  "LinearFit — Train a factored matrix": {
+    "prefix": "blyx-linearfit-scale",
+    "isFileTemplate": true,
+    "body": [
+      "use vendor::linearfit::bilinear;",
+      "",
+      "fn main() {",
+      "    let left = [1,0,0,1];",
+      "    let right = [1,0,0,1];",
+      "    let gram = lf_pair_gram(left,right,2);",
+      "    let alpha = lf_pair_fit(gram,[1,-1],[0,0],1,1.0);",
+      "    println!(lf_pair_predict(left,right,alpha,[2,3],[1,1]));",
+      "    println!(lf_pair_weight(left,right,alpha,1,1));",
+      "}"
+    ],
+    "description": "Run inside the LinearFit starter using the pinned native compiler."
   }
 }

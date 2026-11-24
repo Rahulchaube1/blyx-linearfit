@@ -1,0 +1,92 @@
+use bilinear;
+use std::buffer;
+use std::cli;
+use std::text;
+
+fn study_factor(width: i64, scale: f64) -> vector {
+    let mut result = buffer_fill(4*width,scale);
+    let mut row = 1;
+    while row < 4 {
+        let mut i = 0;
+        while i < width {
+            let mut negative = false;
+            if row%2 == 1 && i%2 == 1 { negative = !negative; }
+            if row >= 2 && (i/2)%2 == 1 { negative = !negative; }
+            if negative { result = buffer_set(result,row*width+i,-scale); }
+            i += 1;
+        }
+        row += 1;
+    }
+    result
+}
+fn explicit_matrix(left: vector, right: vector, y: vector, d: i64, e: i64, epochs: i64) -> vector {
+    let mut weights = buffer_fill(d*e,0.0);
+    let mut epoch = 0;
+    while epoch < epochs {
+        let mut k = 0;
+        while k < 4 {
+            let mut pred = 0.0; let mut i = 0;
+            while i < d {
+                let mut j = 0;
+                while j < e {
+                    pred += at(weights,i*e+j)*at(left,k*d+i)*at(right,k*e+j);
+                    j += 1;
+                }
+                i += 1;
+            }
+            let delta = at(y,k)-pred; i = 0;
+            while i < d {
+                let mut j = 0;
+                while j < e {
+                    weights = buffer_set(weights,i*e+j,at(weights,i*e+j)+delta*at(left,k*d+i)*at(right,k*e+j));
+                    j += 1;
+                }
+                i += 1;
+            }
+            k += 1;
+        }
+        epoch += 1;
+    }
+    weights
+}
+fn main() {
+    let args = cli_args();
+    if args_len(args) != 2 { stderr_line("pair-study factors|dense LOG2_LEFT_WIDTH (3 through 21)"); process_exit(2); }
+    let mode = args_at(args,0); let power = args_at(args,1);
+    let mut d = 1; let mut exponent = 0;
+    while exponent < 22 && int_text(exponent) != power { d *= 2; exponent += 1; }
+    if exponent < 3 || exponent > 21 || (mode != "factors" && mode != "dense") || (mode == "dense" && exponent > 9) { process_exit(2); }
+    let e = d/2;
+    let left = study_factor(d,1.0/at([d],0)); let right = study_factor(e,1.0);
+    let y = [1,-0.5,0.75,0.25];
+    let gram = lf_pair_gram(left,right,4);
+    let alpha = lf_pair_fit(gram,y,[0,0,0,0],12,1.0);
+    if len(alpha) != 4 { process_exit(1); }
+    let mut loss = 0.0; let mut k = 0;
+    while k < 4 {
+        let mut pred = 0.0; let mut j = 0;
+        while j < 4 { pred += at(gram,4*k+j)*at(alpha,j); j += 1; }
+        let error = pred-at(y,k); loss += error*error/8.0; k += 1;
+    }
+    let mut max_error = 0.0;
+    if mode == "dense" {
+        let weights = explicit_matrix(left,right,y,d,e,12);
+        let mut i = 0;
+        while i < d {
+            let mut j = 0;
+            while j < e {
+                let delta = lf_pair_weight(left,right,alpha,i,j)-at(weights,i*e+j);
+                if delta > max_error { max_error = delta; }
+                if -delta > max_error { max_error = -delta; }
+                j += 1;
+            }
+            i += 1;
+        }
+        if max_error > 0.000000000001 { process_exit(1); }
+    }
+    print!("{\"coefficients\":"); print!(d*e); print!(",\"left_width\":"); print!(d);
+    print!(",\"right_width\":"); print!(e); print!(",\"updates\":48,\"stored_factor_values\":"); print!(4*(d+e));
+    print!(",\"half_mse\":"); print!(loss); print!(",\"corner_weight\":"); print!(lf_pair_weight(left,right,alpha,d-1,e-1));
+    if mode == "dense" { print!(",\"max_dense_error\":"); print!(max_error); }
+    println!("}");
+}

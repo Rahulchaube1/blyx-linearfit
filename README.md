@@ -4,16 +4,20 @@
 
 Train, merge and deploy a single-feature least-squares or ridge regression with an unpenalized intercept. Train on one numerical feature with an intercept. Retain a compact state for an incoming stream, merge states from separate batches, or fit vectors in one call. The command-line program trains from a real CSV and can make a prediction in the same invocation.
 
+## Bilinear regression on paired features
+
+Train a bilinear regression with factored examples, resume SGD, predict new pairs and query individual coefficients without allocating a dense weight matrix. [Commands and worked example](https://github.com/Rahulchaube1/blyx-linearfit/blob/v0.2.0/SCALE.md) · [Measurements and source data](https://www.blyx-lang.space/articles/training-in-factors)
+
 ## Editor extension
 
-Install **RahulChaube.blyx-linearfit** to run the worked example and use the framework’s function completions in a Blyx file. Open an empty `.blyx` file, enter `blyx-linearfit-demo`, then choose **Blyx: Run File**. [Editor downloads](https://www.blyx-lang.space/packages/linearfit#editor) · [Download the extension](https://github.com/Rahulchaube1/blyxxxx/releases/download/framework-editors-v0.1.0/blyx-linearfit-0.1.0.vsix) · [Starter with framework source](https://github.com/Rahulchaube1/blyxxxx/releases/download/framework-editors-v0.1.0/blyx-linearfit-starter-0.1.0.zip)
+Install **RahulChaube.blyx-linearfit** to run the worked example and use the framework’s function completions in a Blyx file. Open an empty `.blyx` file, enter `blyx-linearfit-demo`, then choose **Blyx: Run File**. [Editor downloads](https://www.blyx-lang.space/packages/linearfit#editor) · [Download the extension](https://github.com/Rahulchaube1/blyx-linearfit/releases/download/v0.2.0/blyx-linearfit-0.2.0.vsix) · [Starter with framework source](https://github.com/Rahulchaube1/blyx-linearfit/releases/download/v0.2.0/blyx-linearfit-starter-0.2.0.zip)
 
 ## Use it in a project
 
 Install [Blyx 0.2.1](https://github.com/Rahulchaube1/blyxxxx/releases/tag/v0.2.1), Rust 1.85 or newer, and a host linker for native compilation. From the directory containing your entry file, pin the library with Git.
 
 ```sh
-git clone --depth 1 --branch v0.1.1 https://github.com/Rahulchaube1/blyx-linearfit.git vendor/linearfit
+git clone --depth 1 --branch v0.2.0 https://github.com/Rahulchaube1/blyx-linearfit.git vendor/linearfit
 ```
 
 Save this program as `main.blyx` beside `vendor` and run `blyxc native-run main.blyx`.
@@ -38,7 +42,7 @@ Expected output:
 
 ## Command-line tool
 
-Extract [the release archive](https://github.com/Rahulchaube1/blyx-linearfit/releases/tag/v0.1.1) for Windows x64, Linux x64 or Apple Silicon macOS. Verify the archive against `SHA256SUMS`. The archive includes example CSV files. In PowerShell start the executable with `.\linearfit.exe`. The x64 Windows executable uses the Microsoft Visual C++ runtime.
+Extract [the release archive](https://github.com/Rahulchaube1/blyx-linearfit/releases/tag/v0.2.0) for Windows x64, Linux x64 or Apple Silicon macOS. Verify the archive against `SHA256SUMS`. The archive includes example CSV files. In PowerShell start the executable with `.\linearfit.exe`. The x64 Windows executable uses the Microsoft Visual C++ runtime.
 
 ```sh
 ./linearfit fixtures/line.csv --predict 5

@@ -17,7 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install --locked --version 0.2.1 blyxc
+      - run: cargo install --locked --git https://github.com/Rahulchaube1/blyxxxx --rev 120d6b6ec6df09ff018d7c18752fb3297b5e629d blyxc
+      - run: blyxc native-run scale_example.blyx
       - run: blyxc native-run tests.blyx
       - run: blyxc native-run example.blyx
       - run: blyxc build main.blyx -o ${{ matrix.file }}
@@ -31,29 +32,56 @@ jobs:
           BINARY: ${{ matrix.file }}
         run: |
           mkdir dist
+          study=pair-study
+          if [[ "$PLATFORM" == windows-x64 ]]; then study=pair-study.exe; fi
+          blyxc build pair_study.blyx -o "$study"
+          "./$study" dense 6
           if [[ "$PLATFORM" == windows-x64 ]]; then
-            7z a "dist/linearfit-$PLATFORM.zip" "$BINARY" fixtures assets README.md LICENSE-MIT LICENSE-APACHE
+            7z a "dist/linearfit-$PLATFORM.zip" "$BINARY" "$study" fixtures assets *.blyx Blyx.toml vendor README.md SCALE.md LICENSE-MIT LICENSE-APACHE
           else
-            tar -czf "dist/linearfit-$PLATFORM.tar.gz" "$BINARY" fixtures assets README.md LICENSE-MIT LICENSE-APACHE
+            tar -czf "dist/linearfit-$PLATFORM.tar.gz" "$BINARY" "$study" fixtures assets *.blyx Blyx.toml vendor README.md SCALE.md LICENSE-MIT LICENSE-APACHE
           fi
       - uses: actions/upload-artifact@v4
         with:
           name: linearfit-${{ matrix.platform }}
           path: dist/*
+  editor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Package the editor and source starter
+        shell: bash
+        run: |
+          set -eu
+          version=$(jq -r .version editor/package.json)
+          mkdir -p dist
+          (cd editor && npx --yes @vscode/vsce@4.1.1 package --no-dependencies --out "../dist/blyx-linearfit-$version.vsix")
+          (cd editor/starter && zip -qr "../../dist/blyx-linearfit-starter-$version.zip" .)
+          unzip -t "dist/blyx-linearfit-$version.vsix"
+          unzip -p "dist/blyx-linearfit-$version.vsix" extension/logo.png | cmp - editor/logo.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blyx-linearfit-editor
+          path: dist/*
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
-    needs: test
+    needs: [test, editor]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
-      - run: cd dist && sha256sum *.tar.gz *.zip > SHA256SUMS
+      - run: cd dist && sha256sum *.tar.gz *.zip *.vsix > SHA256SUMS
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*
           body: |
-            Extract the archive for your platform and compare its SHA-256 digest with SHA256SUMS. Fit fixtures/line.csv with --predict 5. Expected prediction: 11. See README.md for the input format, API and examples.
+            Train bilinear regression on paired feature vectors and inspect individual matrix coefficients. Includes the native CLI, scale study, source starter and editor.
+
+            [Release guide](https://github.com/Rahulchaube1/blyx-linearfit/blob/v0.2.0/SCALE.md) · [Measurements](https://www.blyx-lang.space/articles/training-in-factors)

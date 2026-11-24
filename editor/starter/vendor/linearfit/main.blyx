@@ -1,16 +1,19 @@
 use std::cli;
 use std::text;
 use csvpair;
+use pair_cli;
 use csvfit;
 use linearfit;
 
 fn main() {
     let args = cli_args();
+    if lf_pair_command(args) { return; }
     if args_len(args) == 0 { csv_fail("Usage: linearfit FILE [--ridge LAMBDA] [--predict X]"); }
     let path = args_at(args, 0);
-    if path == "--version" { println!("linearfit 0.1.1"); return; }
+    if path == "--version" { println!("linearfit 0.2.0"); return; }
     if path == "--help" {
         println!("linearfit FILE [--ridge LAMBDA] [--predict X]");
+        println!("pair-fit FACTORS EPOCHS RATE [COEFFICIENTS] | pair-predict FACTORS COEFFICIENTS LEFT_CSV RIGHT_CSV | pair-weight FACTORS COEFFICIENTS I J");
         println!("Read a numeric x,y CSV and print a centered regression model as JSON.");
         return;
     }

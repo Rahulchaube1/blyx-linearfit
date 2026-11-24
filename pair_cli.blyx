@@ -1,0 +1,83 @@
+use std::cli;
+use std::fs;
+use std::text;
+use std::buffer;
+use bilinear;
+
+fn lf_check(ok: bool, message: str) {
+    if !ok { stderr_line(message); process_exit(2); }
+}
+fn lf_uint(s: str) -> i64 {
+    let mut t = s;
+    let mut v = 0;
+    lf_check(t != "", "Expected a nonnegative integer");
+    while t != "" {
+        let mut d = 0;
+        while d < 10 && !text_starts(t,int_text(d)) { d += 1; }
+        lf_check(d < 10 && v <= (9223372036854775807-d)/10, "Invalid or overflowing integer");
+        v = v*10+d; t = text_after(t,int_text(d));
+    }
+    v
+}
+fn lf_parse(s: str) -> f64 {
+    let t = text_trim(s);
+    lf_check(text_is_number(t),"Expected a finite number");
+    text_number(t)
+}
+fn lf_column(lines: arglist, column: i64) -> vector {
+    let n = args_len(lines);
+    lf_check(n > 0,"Empty factor file");
+    let first = text_split(args_at(lines,0),";");
+    lf_check(args_len(first) == 3,"Expected target;left CSV;right CSV");
+    let width = args_len(text_split(args_at(first,column),","));
+    lf_check(width > 0 && n <= 9223372036854775807/width,"Invalid factor width");
+    if column == 0 { lf_check(width == 1,"Expected one target"); }
+    let mut out = buffer_fill(n*width,0.0);
+    let mut row = 0;
+    while row < n {
+        let fields = text_split(args_at(lines,row),";");
+        lf_check(args_len(fields) == 3,"Expected three columns");
+        let values = text_split(args_at(fields,column),",");
+        lf_check(args_len(values) == width,"Inconsistent factor width");
+        let mut j = 0;
+        while j < width { out = buffer_set(out,row*width+j,lf_parse(args_at(values,j))); j += 1; }
+        row += 1;
+    }
+    out
+}
+fn lf_csv_vector(s: str) -> vector {
+    let fields = text_split(text_trim(s),",");
+    let mut out = buffer_fill(args_len(fields),0.0);
+    let mut i = 0;
+    while i < len(out) { out = buffer_set(out,i,lf_parse(args_at(fields,i))); i += 1; }
+    out
+}
+pub fn lf_pair_command(args: arglist) -> bool {
+    if args_len(args) == 0 { return false; }
+    let cmd = args_at(args,0);
+    if cmd != "pair-fit" && cmd != "pair-predict" && cmd != "pair-weight" { return false; }
+    lf_check((cmd == "pair-fit" && (args_len(args) == 4 || args_len(args) == 5)) || (cmd != "pair-fit" && args_len(args) == 5),"See linearfit --help for pair commands");
+    let lines = text_lines(read_text(args_at(args,1)));
+    let left = lf_column(lines,1);
+    let right = lf_column(lines,2);
+    let targets = lf_column(lines,0);
+    if cmd == "pair-fit" {
+        let mut initial = buffer_fill(len(targets),0.0);
+        if args_len(args) == 5 { initial = lf_csv_vector(read_text(args_at(args,4))); }
+        let gram = lf_pair_gram(left,right,len(targets));
+        let alpha = lf_pair_fit(gram,targets,initial,lf_uint(args_at(args,2)),lf_parse(args_at(args,3)));
+        lf_check(len(alpha) > 0,"Invalid or divergent fit");
+        let mut i = 0;
+        while i < len(alpha) { if i > 0 { print!(","); } print!(at(alpha,i)); i += 1; }
+        println!();
+    } else {
+        let alpha = lf_csv_vector(read_text(args_at(args,2)));
+        lf_check(len(alpha) == len(targets),"Coefficient count must match the rows in the factor file");
+        let mut value = 0.0;
+        if cmd == "pair-weight" { value = lf_pair_weight(left,right,alpha,lf_uint(args_at(args,3)),lf_uint(args_at(args,4))); }
+        else { value = lf_pair_predict(left,right,alpha,lf_csv_vector(args_at(args,3)),lf_csv_vector(args_at(args,4))); }
+        lf_check(value-value == 0.0,"Invalid query dimensions, index or arithmetic result");
+        println!(value);
+    }
+    true
+}
